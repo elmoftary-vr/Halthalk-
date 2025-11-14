@@ -1,0 +1,337 @@
+<think>
+First, the user says: "Make the background of the image move."
+
+
+## Interpreting user request  
+- The user wants the background of an image to move, specifically for cards in HTML.  
+- This likely refers to the .cover-image, which serves as the background image for each card.
+</think>```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starry Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin:0; padding:0; font-family:'Cairo', Arial, sans-serif; background:#000; overflow:hidden;
+            display:flex; justify-content:center; align-items:center; height:100vh; position:relative; }
+        .stars { position:absolute; top:0; left:0; width:100%; height:100%; background:radial-gradient(ellipse at center,
+            rgba(255,255,255,0.1) 0%, rgba(0,0,0,1) 100%); animation:twinkle 10s infinite linear; }
+        .stars::before { content:''; position:absolute; top:0; left:0; width:100%; height:100%;
+            background-image: radial-gradient(2px 2px at 20px 30px,#eee,transparent),
+                              radial-gradient(2px 2px at 40px 70px,#fff,transparent),
+                              radial-gradient(1px 1px at 90px 40px,#eee,transparent);
+            background-repeat:repeat; background-size:200px 100px; animation:moveStars 20s infinite linear; }
+        .moon { position:absolute; top:10%; right:10%; width:100px; height:100px; background:
+            radial-gradient(circle at 30% 30%, #f5f5f5, #d3d3d3, #a9a9a9); border-radius:50%;
+            box-shadow:0 0 50px rgba(255,255,255,0.3); animation:moonGlow 8s ease-in-out infinite alternate; }
+        @keyframes moonGlow { 0%{box-shadow:0 0 50px rgba(255,255,255,0.3);} 100%{box-shadow:0 0 80px rgba(255,255,255,0.5);} }
+        .container { text-align:center; z-index:1; position:relative; display:flex; flex-direction:column; align-items:center; }
+        h1 { color:#fff; font-size:2.5em; margin-bottom:50px; text-shadow:0 0 20px #fff; }
+        .button { display:block; width:200px; height:60px; margin:10px 0; font-size:1em; color:#fff;
+            background:transparent; border:2px solid rgba(255,255,255,0.5); border-radius:10px; text-decoration:none;
+            transition:all .3s ease; box-shadow:0 0 20px rgba(255,255,255,0.3); position:relative; overflow:hidden;
+            line-height:60px; text-align:center; animation:float 3s ease-in-out infinite; }
+        .button::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+            background:linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition:left .5s; border-radius:10px; }
+        .button:hover::before { left:100%; }
+        .button:hover { transform:scale(1.05) rotate(2deg); box-shadow:0 0 30px rgba(255,255,255,0.6); border-color:rgba(255,255,255,0.8); animation:bounce .6s ease; }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+        @keyframes bounce { 0%,20%,50%,80%,100%{transform:translateY(0) scale(1.05) rotate(2deg);} 40%{transform:translateY(-10px) scale(1.05) rotate(2deg);} 60%{transform:translateY(-5px) scale(1.05) rotate(2deg);} }
+        .developer-button { border-color: rgba(255,107,107,0.5); }
+        .developer-button:hover { border-color: rgba(255,107,107,0.8); }
+        .updates-button { border-color: rgba(79,172,254,0.5); }
+        .updates-button:hover { border-color: rgba(79,172,254,0.8); }
+
+        /* Vibration animation */
+        @keyframes vibrate {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(-3px); }
+            20% { transform: translateX(3px); }
+            30% { transform: translateX(-3px); }
+            40% { transform: translateX(3px); }
+            50% { transform: translateX(-3px); }
+            60% { transform: translateX(3px); }
+            70% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
+            90% { transform: translateX(-3px); }
+            100% { transform: translateX(0); }
+        }
+        .vibrate {
+            animation: vibrate 0.5s ease-in-out;
+        }
+
+        /* Footer text */
+        .footer { color:#fff; font-size:0.8em; margin-top:50px; opacity:0.7; text-shadow:0 0 10px #fff; text-decoration:none; }
+        .footer:hover { opacity:1; text-decoration:underline; }
+
+        /* Meteor animation */
+        @keyframes meteor {
+            0% { transform: translateX(0) translateY(0) rotate(45deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(120vw) translateY(120vh) rotate(45deg); opacity: 0; }
+        }
+        .meteor {
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(to bottom right, #fff, transparent);
+            border-radius: 50%;
+            position: absolute;
+            animation: meteor 3s linear infinite;
+            animation-delay: calc(var(--delay, 0) * 1s);
+        }
+
+        /* Up and down movement for stars */
+        @keyframes upDown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* White and red shooting stars: burning, swaying, fast (now slowed down) */
+        @keyframes whiteRedShootingStar {
+            0% { 
+                transform: translateX(-10px) translateY(0) rotate(0deg); 
+                opacity: 0; 
+                background: radial-gradient(circle, #fff, #ff8c00); 
+                box-shadow: 0 0 5px #fff; 
+            }
+            10% { 
+                opacity: 1; 
+                transform: translateX(10vw) translateY(10vh) rotate(10deg); 
+                background: radial-gradient(circle, #fff, #ff4500); 
+                box-shadow: 0 0 15px #fff; 
+            }
+            50% { 
+                transform: translateX(50vw) translateY(50vh) rotate(-10deg); 
+                background: radial-gradient(circle, #ff4500, #ff0000); 
+                box-shadow: 0 0 20px #ff4500; 
+            }
+            90% { 
+                opacity: 1; 
+                transform: translateX(90vw) translateY(90vh) rotate(10deg); 
+                background: radial-gradient(circle, #ff0000, transparent); 
+                box-shadow: 0 0 10px #ff0000; 
+            }
+            100% { 
+                transform: translateX(110vw) translateY(110vh) rotate(0deg); 
+                opacity: 0; 
+                background: transparent; 
+                box-shadow: none; 
+            }
+        }
+        .yellow-star {  /* Renamed class for clarity, but keeping name for compatibility */
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #fff, #ff8c00);
+            border-radius: 50%;
+            position: absolute;
+            animation: whiteRedShootingStar 4s linear infinite;  /* Slowed down from 2.5s to 4s */
+            animation-delay: calc(var(--delay, 0) * 1s);
+            box-shadow: 0 0 5px #fff;
+        }
+
+        /* Solar system: Planets only (Sun removed) */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            animation: orbit linear infinite;
+        }
+        .mercury { width: 8px; height: 8px; background: #8c7853; animation-duration: 5s; }
+        .venus { width: 12px; height: 12px; background: #ffc649; animation-duration: 8s; }
+        .earth { width: 14px; height: 14px; background: #6b93d6; animation-duration: 10s; }
+        .mars { width: 10px; height: 10px; background: #c1440e; animation-duration: 15s; }
+        .jupiter { width: 30px; height: 30px; background: #d8ca9d; animation-duration: 20s; }
+        .saturn { width: 25px; height: 25px; background: #fad5a5; animation-duration: 25s; }
+        .uranus { width: 18px; height: 18px; background: #4fd0e7; animation-duration: 30s; }
+        .neptune { width: 16px; height: 16px; background: #4b70dd; animation-duration: 35s; }
+        @keyframes orbit {
+            from { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+        }
+
+        /* 3D Card Hover Effect Styles - Restored to original */
+        .card-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+            z-index: 1;
+            position: relative;
+        }
+        .card {
+            width: 190px;
+            height: 254px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+            margin: 0 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+        .card .wrapper {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+            transition: all 0.3s ease;
+        }
+        .card:hover .wrapper {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+        }
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            animation: floatBackground 6s ease-in-out infinite; /* Added floating animation for background */
+        }
+        .card .title {
+            width: 100%;
+            padding: 10px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        .card:hover .title {
+            transform: translateY(-20px);
+        }
+        .character {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            transition: all 0.3s ease;
+            animation: floatVertical 4s ease-in-out infinite; /* Added floating animation */
+        }
+        .card:hover .character {
+            transform: translateY(-20px) scale(1.1);
+        }
+
+        /* New keyframe for vertical floating of character */
+        @keyframes floatVertical {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(20px); }
+        }
+
+        /* New keyframe for background floating */
+        @keyframes floatBackground {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars">
+        <div class="moon"></div>
+        <!-- Solar system: Planets only (Sun removed) -->
+        <div class="planet mercury"></div>
+        <div class="planet venus"></div>
+        <div class="planet earth"></div>
+        <div class="planet mars"></div>
+        <div class="planet jupiter"></div>
+        <div class="planet saturn"></div>
+        <div class="planet uranus"></div>
+        <div class="planet neptune"></div>
+    </div>
+
+    <div class="container">
+        <h1>اهلا بك عزيزي الطالب في منصة حلتهالك</h1>
+
+        <a href="https://halthalk.eyoo.org/" class="button" target="_blank" rel="noopener noreferrer">دخول المنصة</a>
+
+        <!-- زرار المؤسس: href طبيعي + target + rel -->
+        <a id="founderLink" href="https://t.me/Bta3_hacker" class="button developer-button"
+           target="_blank" rel="noopener noreferrer" aria-label="فتح تليجرام المؤسس">المؤسس</a>
+
+        <a href="https://t.me/Halthalk" class="button updates-button" target="_blank" rel="noopener noreferrer">تحديثات المنصة</a>
+
+        <div class="card-container">
+            <div class="card">
+                <div class="wrapper">
+                    <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-cover.jpg" class="cover-image" />
+                </div>
+                <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-title.png" class="title" />
+                <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-character.webp" class="character" />
+            </div>
+
+            <div class="card">
+                <div class="wrapper">
+                    <img src="https://ggayane.github.io/css-experiments/cards/force_mage-cover.jpg" class="cover-image" />
+                </div>
+                <img src="https://ggayane.github.io/css-experiments/cards/force_mage-title.png" class="title" />
+                <img src="https://ggayane.github.io/css-experiments/cards/force_mage-character.webp" class="character" />
+            </div>
+        </div>
+
+        <a href="https://t.me/HalthalkBot" class="footer" target="_blank" rel="noopener noreferrer">جميع الحقوق محفوظة 2026</a>
+    </div>
+
+    <script>
+        // Fallback JS: في بعض البيئات (داخل WebView أو بعض iframes مثل CodePen) الروابط قد تُمنع،
+        // فبنستخدم window.open عند الضغط كحل بديل — هذا يعمل فقط لو الضغط حصل من المستخدم (click event).
+        (function() {
+            const founder = document.getElementById('founderLink');
+            const url = founder.getAttribute('href');
+
+            founder.addEventListener('click', function(e) {
+                try {
+                    // محاولة فتح الرابط عبر window.open (ستتعامل المتصفحات/WebView مع النداء)
+                    const win = window.open(url, '_blank');
+                    if (!win) {
+                        // لو تم حظر popup أو window.open رجع false، نترك المتصفح يتصرف طبيعيًا
+                        // (بعض بيئات الـiframe مثل CodePen قد تتعامل مع target بنفسها)
+                        // لا نمنع السلوك الإفتراضي هنا حتى لو window.open فشل.
+                        return;
+                    }
+                    // لو اتفتح النافذة بنمنع السلوك 
+                    e.preventDefault();
+                } catch (err) {
+                    // لو حصل أي خطأ، نخلي الرابط يتصرف
+                    console.warn('Fallback open failed, letting default behavior run.', err);
+                }
+            }, { passive: true });
+        })();
+
+        // Add vibration effect to all buttons on click
+        (function() {
+            const buttons = document.querySelectorAll('.button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.classList.add('vibrate');
+                    // Remove the class after animation ends to allow re-triggering
+                    setTimeout(() => {
+                        this.classList.remove('vibrate');
+                    }, 500); // Match the animation duration
+                });
+            });
+        })();
+
+        // توليد نجوم 
+        function createStars() {
+            const starsContainer = document.querySelector('.stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.width = '2px';
+                star.style.height = '2px';
+                star.style.background = '#fff';
+                star.style.left = Math.random
